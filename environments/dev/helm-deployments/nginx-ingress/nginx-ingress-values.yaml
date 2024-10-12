@@ -1,0 +1,26 @@
+controller:
+  replicaCount: 2
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+  ingressClassResource:
+    name: nginx
+    enabled: true
+    default: true
+  admissionWebhooks:
+    enabled: true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 256Mi
+  serviceAccount:
+    create: true
+    name: nginx-ingress-serviceaccount
+    annotations:
+      eks.amazonaws.com/role-arn:
+
+defaultBackend:
+  enabled: false

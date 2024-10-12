@@ -1,0 +1,160 @@
+global:
+  redis:
+    password: "123456"
+
+clusterDomain: cluster.local
+
+image:
+  registry: docker.io
+  repository: bitnami/redis
+  tag: 7.4.1-debian-12-r0
+
+architecture: replication
+
+# auth:
+#   enabled: true
+#   sentinel: true
+#   password: "123456"
+
+
+master:
+  count: 1
+  disableCommands:
+    - FLUSHDB
+    - FLUSHALL
+  containerPorts:
+    redis: 6379
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+  persistence:
+    enabled: true
+    storageClass: "gp2"
+    size: 10Gi
+  service:
+    type: LoadBalancer
+    ports:
+      redis: 6379
+    externalTrafficPolicy: Cluster
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "redis-master.cluster1.gpvicente.com"
+      external-dns.alpha.kubernetes.io/alias: "true"
+      external-dns.alpha.kubernetes.io/ttl: "300"
+    sessionAffinity: None
+  pdb:
+    create: true
+    minAvailable: 1
+
+
+
+replica:
+  replicaCount: 2
+  disableCommands:
+    - FLUSHDB
+    - FLUSHALL
+  containerPorts:
+    redis: 6379
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+  persistence:
+    enabled: true
+    storageClass: "gp2"
+    size: 10Gi
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "redis-replica.cluster1.gpvicente.com"
+      external-dns.alpha.kubernetes.io/alias: "true"
+      external-dns.alpha.kubernetes.io/ttl: "300"
+    ports:
+      redis: 6379
+    externalTrafficPolicy: Cluster
+  pdb:
+    create: true
+    minAvailable: 1
+
+
+
+sentinel:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/redis-sentinel
+    tag: 7.4.1-debian-12-r0
+  masterSet: mymaster
+  quorum: 2
+  getMasterTimeout: 90
+  automateClusterRecovery: true
+  redisShutdownWaitFailover: true
+  containerPorts:
+    sentinel: 26379
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "redis.cluster1.gpvicente.com"
+      external-dns.alpha.kubernetes.io/alias: "true"
+      external-dns.alpha.kubernetes.io/ttl: "300"
+    ports:
+      sentinel: 26379
+    externalTrafficPolicy: Cluster
+  persistence:
+    enabled: false
+  pdb:
+    create: true
+    minAvailable: 2
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: false
+  annotations: {}
+
+tls:
+  enabled: false
+  authClients: true
+
+
+useExternalDNS:
+  enabled: true 
+  suffix: "cluster1.gpvicente.com" 
+  annotationKey: external-dns.alpha.kubernetes.io/
+  additionalAnnotations: {}

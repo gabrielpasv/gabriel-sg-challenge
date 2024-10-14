@@ -53,7 +53,7 @@ master:
     minAvailable: 1
   topologySpreadConstraints:
     - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
+      topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
@@ -95,12 +95,11 @@ replica:
     minAvailable: 1
   topologySpreadConstraints:
     - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
+      topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
           app.kubernetes.io/component: replica
-
 
 sentinel:
   enabled: true

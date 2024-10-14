@@ -43,19 +43,21 @@ master:
     storageClass: "gp2"
     size: 10Gi
   service:
-    type: LoadBalancer
+    type: ClusterIP
     ports:
       redis: 6379
     externalTrafficPolicy: Cluster
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: "redis-master.cluster1.gpvicente.com"
-      external-dns.alpha.kubernetes.io/alias: "true"
-      external-dns.alpha.kubernetes.io/ttl: "300"
     sessionAffinity: None
   pdb:
     create: true
     minAvailable: 1
-
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: master
 
 
 replica:
@@ -84,18 +86,20 @@ replica:
     storageClass: "gp2"
     size: 10Gi
   service:
-    type: LoadBalancer
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: "redis-replica.cluster1.gpvicente.com"
-      external-dns.alpha.kubernetes.io/alias: "true"
-      external-dns.alpha.kubernetes.io/ttl: "300"
+    type: ClusterIP
     ports:
       redis: 6379
     externalTrafficPolicy: Cluster
   pdb:
     create: true
     minAvailable: 1
-
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: replica
 
 
 sentinel:
